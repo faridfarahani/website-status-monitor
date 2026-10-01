@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -92,3 +93,18 @@ def load_urls(path: str) -> list[str]:
         raise ValueError("No URLs found in input file.")
 
     return urls
+
+def check_urls_concurrently(urls: list[str], timeout: float = 5.0, workers: int = 5) -> list[CheckResult]:
+    if workers < 1:
+        raise ValueError("workers must be at least 1")
+
+    results: list[CheckResult | None] = [None] * len(urls)
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        future_map = {executor.submit(check_url, url, timeout): index for index, url in enumerate(urls)}
+
+        for future in as_completed(future_map):
+            index = future_map[future]
+            results[index] = future.result()
+
+    return [result for result in results if result is not None]

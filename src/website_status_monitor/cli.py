@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from website_status_monitor.checker import check_url, load_urls
+from website_status_monitor.checker import check_urls_concurrently, load_urls
 from website_status_monitor.reporting import write_json_report
 
 
@@ -21,6 +21,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Request timeout in seconds. Default: 5",
     )
     parser.add_argument(
+        "--workers",
+        type=int,
+        default=5,
+        help="Number of concurrent workers. Default: 5",
+    )
+    parser.add_argument(
         "--json-output",
         help="Optional path for saving results as JSON.",
     )
@@ -31,12 +37,15 @@ def main() -> int:
     args = build_parser().parse_args()
     urls = load_urls(args.file)
 
-    up_count = 0
-    results = []
+    results = check_urls_concurrently(
+        urls,
+        timeout=args.timeout,
+        workers=args.workers,
+    )
 
-    for url in urls:
-        result = check_url(url, timeout=args.timeout)
-        results.append(result)
+    up_count = 0
+
+    for result in results:
 
         if result.is_up:
             up_count += 1
