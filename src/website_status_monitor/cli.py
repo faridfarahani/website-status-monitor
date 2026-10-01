@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 
 from website_status_monitor.checker import check_urls_concurrently, load_urls
-from website_status_monitor.reporting import write_json_report
+from website_status_monitor.reporting import write_csv_report, write_json_report
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -25,6 +25,10 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=5,
         help="Number of concurrent workers. Default: 5",
+    )
+    parser.add_argument(
+        "--csv-output",
+        help="Optional path for saving results as CSV.",
     )
     parser.add_argument(
         "--json-output",
@@ -65,6 +69,10 @@ def main() -> int:
     if args.json_output:
         report_path = write_json_report(results, args.json_output)
         print(f"JSON report: {report_path}")
+
+    if args.csv_output:
+        report_path = write_csv_report(results, args.csv_output)
+        print(f"CSV report: {report_path}")
 
     return 0
 

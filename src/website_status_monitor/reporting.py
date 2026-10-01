@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import csv
 import json
-from dataclasses import asdict
+from dataclasses import asdict, fields
 from pathlib import Path
 from typing import Iterable
 
@@ -18,5 +19,19 @@ def write_json_report(results: Iterable[CheckResult], output_path: str | Path) -
         json.dumps(data, indent=2, ensure_ascii=False),
         encoding='utf-8',
     )
+
+    return output_path
+
+def write_csv_report(results: Iterable[CheckResult], output_path: str | Path) -> Path:
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    rows = [asdict(result) for result in results]
+    fieldnames = [field.name for field in fields(CheckResult)]
+
+    with output_path.open("w", newline="", encoding="utf-8-sig") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
 
     return output_path
