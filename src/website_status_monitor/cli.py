@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 
 from website_status_monitor.checker import check_url, load_urls
+from website_status_monitor.reporting import write_json_report
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -19,6 +20,10 @@ def build_parser() -> argparse.ArgumentParser:
         default=5.0,
         help="Request timeout in seconds. Default: 5",
     )
+    parser.add_argument(
+        "--json-output",
+        help="Optional path for saving results as JSON.",
+    )
     return parser
 
 
@@ -27,9 +32,11 @@ def main() -> int:
     urls = load_urls(args.file)
 
     up_count = 0
+    results = []
 
     for url in urls:
         result = check_url(url, timeout=args.timeout)
+        results.append(result)
 
         if result.is_up:
             up_count += 1
@@ -45,6 +52,10 @@ def main() -> int:
 
     print()
     print(f"Checked: {len(urls)} | Up: {up_count} | Down: {len(urls) - up_count}")
+
+    if args.json_output:
+        report_path = write_json_report(results, args.json_output)
+        print(f"JSON report: {report_path}")
 
     return 0
 
