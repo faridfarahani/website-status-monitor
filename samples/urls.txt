@@ -1,0 +1,4 @@
+# Sample URLs
+https://example.com
+https://python.org
+example.invalid
